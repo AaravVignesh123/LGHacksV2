@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homeless Assistance Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .stat-icon.events { background: #fef3c7; }
+        .stat-icon.ngos { background: #dbeafe; }
+        .stat-icon.active { background: #d1fae5; }
+
+        .stat-info h3 {
+            color: #718096;
+            font-size: 0.9em;
+            font-weight: 500;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .stat-info p {
+            color: #2d3748;
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .content-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .content-card.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .section-header h2 {
+            color: #2d3748;
+            font-size: 1.8em;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #f56565;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f7fafc;
+            color: #2d3748;
+            font-weight: 600;
+            text-align: left;
+            padding: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge.new { background: #bee3f8; color: #2c5282; }
+        .badge.notified { background: #c6f6d5; color: #22543d; }
+        .badge.encampment { background: #fed7d7; color: #742a2a; }
+        .badge.motion { background: #feebc8; color: #7c2d12; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        input, textarea {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #38a169;
+        }
+
+        .alert.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #e53e3e;
+        }
+
+        .refresh-indicator {
+            display: inline-block;
+            margin-left: 10px;
+            color: #718096;
+            font-size: 0.9em;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .refresh-indicator.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏠 Homeless Assistance Dashboard</h1>
+            <p class="subtitle">Real-time monitoring and NGO coordination system</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-icon events">📊</div>
+                <div class="stat-info">
+                    <h3>Total Events</h3>
+                    <p id="stat-events">-</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon ngos">🏢</div>
+                <div class="stat-info">
+                    <h3>Registered NGOs</h3>
+                    <p id="stat-ngos">-</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon active">🚨</div>
+                <div class="stat-info">
+                    <h3>Active Alerts</h3>
+                    <p id="stat-alerts">-</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="events">Recent Events</button>
+            <button class="tab" data-tab="ngos">NGO Management</button>
+            <button class="tab" data-tab="add-ngo">Add NGO</button>
+        </div>
+
+        <!-- Events Tab -->
+        <div class="content-card active" id="tab-events">
+            <div class="section-header">
+                <h2>Recent Events <span class="refresh-indicator" id="refresh-indicator">↻ Refreshed</span></h2>
+                <div>
+                    <button class="btn" onclick="loadEvents()">↻ Refresh</button>
+                    <button class="btn btn-danger" onclick="clearEvents()">Clear All Events</button>
+                </div>
+            </div>
+            <div id="events-content">
+                <div class="loading">Loading events...</div>
+            </div>
+        </div>
+
+        <!-- NGOs Tab -->
+        <div class="content-card" id="tab-ngos">
+            <div class="section-header">
+                <h2>Registered NGOs</h2>
+                <button class="btn" onclick="loadNGOs()">↻ Refresh</button>
+            </div>
+            <div id="ngos-content">
+                <div class="loading">Loading NGOs...</div>
+            </div>
+        </div>
+
+        <!-- Add NGO Tab -->
+        <div class="content-card" id="tab-add-ngo">
+            <div class="section-header">
+                <h2>Register New NGO</h2>
+            </div>
+            <div id="alert-container"></div>
+            <form id="ngo-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Organization Name *</label>
+                        <input type="text" id="ngo-name" required placeholder="e.g., Community Outreach Center">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number *</label>
+                        <input type="tel" id="ngo-phone" required placeholder="+1234567890">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="ngo-email" placeholder="contact@ngo.org">
+                    </div>
+                    <div class="form-group">
+                        <label>Services Provided</label>
+                        <input type="text" id="ngo-services" placeholder="e.g., shelter, food, medical">
+                    </div>
+                </div>
+                <button type="submit" class="btn">Register NGO</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:5000';
+        let autoRefreshInterval;
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.content-card').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`tab-${tabName}`).classList.add('active');
+            });
+        });
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/stats`);
+                const data = await response.json();
+                
+                document.getElementById('stat-events').textContent = data.total_events;
+                document.getElementById('stat-ngos').textContent = data.total_ngos;
+                document.getElementById('stat-alerts').textContent = data.active_alerts;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load events
+        async function loadEvents() {
+            const container = document.getElementById('events-content');
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/events`);
+                const events = await response.json();
+                
+                if (events.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <h3>No events yet</h3>
+                            <p>Events from your sensors will appear here</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Device</th>
+                                    <th>Event Type</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>NGOs Notified</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${events.map(e => `
+                                    <tr>
+                                        <td>#${e.id}</td>
+                                        <td>${e.device_id}</td>
+                                        <td>
+                                            <span class="badge ${e.event_type === 'possible_encampment' ? 'encampment' : 'motion'}">
+                                                ${e.event_type === 'possible_encampment' ? '🚨' : '👁️'} 
+                                                ${e.event_type}
+                                            </span>
+                                        </td>
+                                        <td>${formatTime(e.created_at)}</td>
+                                        <td><span class="badge ${e.status}">${e.status}</span></td>
+                                        <td>${e.matched_ngos ? e.matched_ngos.split(',').length : '0'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+                
+                showRefreshIndicator();
+                loadStats();
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <h3>Error loading events</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load NGOs
+        async function loadNGOs() {
+            const container = document.getElementById('ngos-content');
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/ngos`);
+                const ngos = await response.json();
+                
+                if (ngos.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🏢</div>
+                            <h3>No NGOs registered</h3>
+                            <p>Add your first NGO to start receiving alerts</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Organization</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${ngos.map(n => `
+                                    <tr>
+                                        <td>#${n.id}</td>
+                                        <td><strong>${n.name}</strong></td>
+                                        <td>${n.phone || '-'}</td>
+                                        <td>${n.email || '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+                
+                loadStats();
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <h3>Error loading NGOs</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Add NGO
+        document.getElementById('ngo-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                name: document.getElementById('ngo-name').value,
+                phone: document.getElementById('ngo-phone').value,
+                email: document.getElementById('ngo-email').value,
+                services: document.getElementById('ngo-services').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/ngos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                showAlert('success', `✓ Successfully registered ${result.name}`);
+                document.getElementById('ngo-form').reset();
+                loadStats();
+            } catch (error) {
+                showAlert('error', `✗ Error: ${error.message}`);
+            }
+        });
+
+        // Clear events
+        async function clearEvents() {
+            if (!confirm('Are you sure you want to clear all events? This cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/clear`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                alert(`✓ Cleared ${result.deleted} events`);
+                loadEvents();
+            } catch (error) {
+                alert(`✗ Error: ${error.message}`);
+            }
+        }
+
+        // Helper functions
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000);
+            
+            if (diff < 60) return `${diff}s ago`;
+            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+            return date.toLocaleString();
+        }
+
+        function showAlert(type, message) {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `<div class="alert ${type} show">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        function showRefreshIndicator() {
+            const indicator = document.getElementById('refresh-indicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        // Initialize
+        loadStats();
+        loadEvents();
+        loadNGOs();
+
+        // Auto-refresh events every 10 seconds
+        autoRefreshInterval = setInterval(() => {
+            loadEvents();
+        }, 10000);
+    </script>
+</body>
+</html>
